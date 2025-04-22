@@ -1,0 +1,30 @@
+trigger:
+- main
+
+pool:
+  name: Default  
+
+variables:
+  buildConfiguration: 'Release'
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.x.x'
+
+- script: dotnet restore
+  displayName: 'Restore packages'
+
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Build project'
+
+- script: dotnet pack --configuration $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)
+  displayName: 'Create NuGet package'
+
+- task: NuGetCommand@2
+  inputs:
+    command: push
+    packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+    publishFeed: 'StringUtilitiesFeed'  
+    allowPackageConflicts: true
